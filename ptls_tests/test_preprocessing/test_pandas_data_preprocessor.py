@@ -25,6 +25,30 @@ def test_pandas_data_preprocessor():
     assert len(features) == 3
 
 
+def test_empty_categories_with_identity_columns():
+    data = pd.DataFrame({
+        'id': [1, 1, 2, 2],
+        'event_time': [1, 2, 1, 2],
+        'amount': [10.0, 20.0, 30.0, 40.0],
+        'labels': [100, 101, 200, 201],
+    })
+    pp = PandasDataPreprocessor(
+        col_id='id',
+        col_event_time='event_time',
+        event_time_transformation='none',
+        cols_category=[],
+        cols_numerical=['amount'],
+        cols_identity=['labels'],
+        n_jobs=1,
+    )
+
+    features = pp.fit_transform(data)
+
+    assert len(features) == 2
+    assert features[0]['labels'].tolist() == [100, 101]
+    assert features[1]['labels'].tolist() == [200, 201]
+
+
 def test_csv():
     data_path = Path(__file__).parent / '..' / "age-transactions.csv"
     source_data = pd.read_csv(data_path)

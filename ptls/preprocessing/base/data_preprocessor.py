@@ -49,9 +49,9 @@ class DataPreprocessor(BaseEstimator, TransformerMixin):
     ):
         self.cl_id = col_id
         self.ct_event_time = col_event_time
-        self.cts_category = cols_category
-        self.cts_numerical = cols_numerical
-        self.cols_identity = cols_identity
+        self.cts_category = cols_category or []
+        self.cts_numerical = cols_numerical or []
+        self.cols_identity = cols_identity or []
         self.t_user_group = t_user_group
         self.n_jobs = n_jobs
         self.category_transformation = None
@@ -60,10 +60,14 @@ class DataPreprocessor(BaseEstimator, TransformerMixin):
 
         self._init_transform_function()
 
+        cts_identity = [
+            ColIdentityEncoder(col_name_original=col) for col in self.cols_identity
+        ]
         self._all_col_transformers = [
             [self.ct_event_time],
             self.cts_category,
             self.cts_numerical,
+            cts_identity,
             [self.t_user_group],
         ]
         self.unitary_func, self.aggregate_func = {}, {}
@@ -105,7 +109,7 @@ class DataPreprocessor(BaseEstimator, TransformerMixin):
         else:
             self.ct_event_time = self.ct_event_time
 
-        if isinstance(self.cts_category[0], str):
+        if self.cts_category and isinstance(self.cts_category[0], str):
             self.cts_category = Either(
                 value=self.ct_event_time,
                 monoid=["event_time", self.category_transformation == "frequency"],
